@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BenefitMaxxer — Credit Card Benefit Tracker</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">💳</span>
+        <span class="logo-text">BenefitMaxxer</span>
+      </div>
+      <p class="tagline">Track your credit card benefits automatically from your spending data</p>
+    </div>
+  </header>
+
+  <!-- Wizard Progress -->
+  <nav class="wizard-nav" id="wizard-nav">
+    <div class="wizard-nav-inner">
+      <div class="wizard-step active" id="nav-step-1">
+        <span class="step-num">1</span>
+        <span class="step-label">Select Cards</span>
+      </div>
+      <div class="wizard-connector"></div>
+      <div class="wizard-step" id="nav-step-2">
+        <span class="step-num">2</span>
+        <span class="step-label">Upload Spending</span>
+      </div>
+      <div class="wizard-connector"></div>
+      <div class="wizard-step" id="nav-step-3">
+        <span class="step-num">3</span>
+        <span class="step-label">Dashboard</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+
+    <!-- Step 1: Card Selection -->
+    <section class="wizard-panel active" id="step-1">
+      <div class="step-header">
+        <h2>Which credit cards do you hold?</h2>
+        <p>Select all the cards you want to track benefits for.</p>
+      </div>
+
+      <div class="card-filters">
+        <div class="search-wrap">
+          <input type="text" id="card-search" class="search-input" placeholder="Search cards..." autocomplete="off">
+          <span class="search-icon">&#128269;</span>
+        </div>
+        <div class="issuer-filters" id="issuer-filters">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="selected-count" id="selected-count" style="display:none">
+        <span id="selected-count-text">0 cards selected</span>
+        <button class="btn-link" id="clear-selection">Clear all</button>
+      </div>
+
+      <div class="card-grid" id="card-grid">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="step-actions">
+        <button class="btn btn-primary btn-lg" id="step1-next" disabled>
+          Continue &#8594;
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 2: Upload -->
+    <section class="wizard-panel" id="step-2">
+      <div class="step-header">
+        <h2>Upload your spending reports</h2>
+        <p>Export a CSV from each bank's website and drop them here — one per bank account. All processing is local, your data never leaves your browser.</p>
+      </div>
+
+      <!-- Bank export instructions -->
+      <details class="bank-instructions">
+        <summary class="bank-instructions-toggle">
+          <span>&#128218; How to export a CSV from your bank</span>
+          <span class="bank-instructions-chevron">&#8964;</span>
+        </summary>
+        <div class="bank-instructions-body">
+          <div class="bank-instruction-row">
+            <span class="bank-tag chase">Chase</span>
+            <ol>
+              <li>Sign in at <strong>chase.com</strong></li>
+              <li>Select the credit card account</li>
+              <li>Click <strong>Download account activity</strong> (below the transaction list)</li>
+              <li>Choose date range &rarr; file type <strong>CSV</strong> &rarr; Download</li>
+            </ol>
+          </div>
+          <div class="bank-instruction-row">
+            <span class="bank-tag amex">Amex</span>
+            <ol>
+              <li>Sign in at <strong>americanexpress.com</strong></li>
+              <li>Go to <strong>Statements &amp; Activity</strong></li>
+              <li>Click <strong>Download</strong> (top-right of transaction list)</li>
+              <li>Select <strong>Comma Separated Values (.csv)</strong> &rarr; Download</li>
+            </ol>
+          </div>
+          <div class="bank-instruction-row">
+            <span class="bank-tag citi">Citi</span>
+            <ol>
+              <li>Sign in at <strong>online.citi.com</strong></li>
+              <li>Select the card account &rarr; <strong>Account Activity</strong></li>
+              <li>Click <strong>Download</strong> &rarr; choose date range</li>
+              <li>Select <strong>CSV</strong> format &rarr; Download</li>
+            </ol>
+          </div>
+          <div class="bank-instruction-row">
+            <span class="bank-tag bofa">BofA</span>
+            <ol>
+              <li>Sign in at <strong>bankofamerica.com</strong></li>
+              <li>Select the card account &rarr; <strong>Transactions</strong> tab</li>
+              <li>Click <strong>Download</strong> &rarr; choose date range</li>
+              <li>Select <strong>Comma Separated Values (CSV)</strong> &rarr; Download</li>
+            </ol>
+          </div>
+          <div class="bank-instruction-row">
+            <span class="bank-tag cap1">Capital One</span>
+            <ol>
+              <li>Sign in at <strong>capitalone.com</strong></li>
+              <li>Select the card account</li>
+              <li>Click <strong>Download Transactions</strong></li>
+              <li>Choose date range &rarr; <strong>CSV</strong> &rarr; Download</li>
+            </ol>
+          </div>
+          <div class="bank-instruction-row">
+            <span class="bank-tag wf">Wells Fargo</span>
+            <ol>
+              <li>Sign in at <strong>wellsfargo.com</strong></li>
+              <li>Select the card account &rarr; <strong>Account Activity</strong></li>
+              <li>Click <strong>Download Account Activity</strong></li>
+              <li>Choose date range &rarr; <strong>Comma Delimited</strong> &rarr; Download</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+
+      <div class="upload-zone" id="upload-zone">
+        <div class="upload-icon">&#128196;</div>
+        <p class="upload-main">Drag &amp; drop CSV files here</p>
+        <p class="upload-sub">or <label for="file-input" class="file-label">browse to upload</label></p>
+        <input type="file" id="file-input" accept=".csv" multiple style="display:none">
+        <p class="upload-hint">Supports Chase, Amex, Citi, BofA, Capital One, Wells Fargo exports</p>
+      </div>
+
+      <div class="uploaded-files-list" id="uploaded-files-list">
+        <!-- populated by JS — one row per uploaded file -->
+      </div>
+
+      <div class="year-selector-wrap">
+        <label for="benefit-year">Benefit year to analyze:</label>
+        <select id="benefit-year" class="year-select">
+          <!-- populated by JS -->
+        </select>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn btn-secondary" id="step2-back">&#8592; Back</button>
+        <button class="btn btn-primary btn-lg" id="step2-next" disabled>
+          Analyze &#8594;
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 3: Dashboard -->
+    <section class="wizard-panel" id="step-3">
+      <!-- Summary bar -->
+      <div class="summary-bar" id="summary-bar">
+        <!-- populated by JS -->
+      </div>
+
+      <!-- Overlap & Recommendations panel (hidden when only 1 card) -->
+      <div id="overlap-panel"></div>
+
+      <!-- Per-card benefit sections -->
+      <div class="dashboard-cards" id="dashboard-cards">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="disclaimer">
+        &#9432; Benefit details may change — verify current terms with your card issuer before making decisions.
+      </div>
+
+      <div class="step-actions">
+        <button class="btn btn-secondary" id="step3-back">&#8592; Back to Upload</button>
+        <button class="btn btn-secondary" id="step3-restart">&#8635; Start Over</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>BenefitMaxxer &mdash; All data processed locally in your browser. No data is stored or transmitted.</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/correlator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
